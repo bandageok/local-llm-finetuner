@@ -1,0 +1,104 @@
+# ==================== LLM Fine-Tune Config ====================
+# 修改此文件控制所有训练参数
+
+# --- 基座模型 ---
+model:
+  # HuggingFace 模型 ID 或本地路径
+  # 推荐: Qwen/Qwen3-8B, Qwen/Qwen3-4B, Qwen/Qwen2.5-7B
+  # 也支持: deepseek-ai/DeepSeek-R1-Distill-Qwen-8B, D:/models/Qwen3-8B
+  name_or_path: "Qwen/Qwen3-8B"
+  trust_remote_code: true
+
+# --- 微调方向 ---
+direction:
+  # 微调任务类型: instruction, chat, text_completion, cot (Chain-of-Thought), classification
+  task_type: "instruction"
+  # 系统提示词
+  system_prompt: "你是一个有用的AI助手，请根据用户的问题给出准确、有帮助的回答。"
+  # 微调描述（用于模型标签）
+  description: "Qwen3-8B QLoRA fine-tuned model"
+
+# --- Unsloth 加速（强烈推荐，2x 速度，60% 显存节省）---
+unsloth:
+  # 是否启用 Unsloth（需要 pip install unsloth）
+  enabled: true
+  # 未安装时自动降级到原生 HF
+  fallback: true
+
+# --- QLoRA 配置 ---
+qlora:
+  # LoRA rank: 8=省内存，16=平衡，32=高精度
+  r: 16
+  # LoRA alpha，一般设为 rank 的 2 倍
+  lora_alpha: 32
+  # LoRA dropout
+  lora_dropout: 0.05
+  # 目标模块
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bits: 4
+  bnb_4bit_compute_dtype: "float16"
+  bnb_4bit_quant_type: "nf4"
+
+# --- 训练参数 ---
+training:
+  num_epochs: 3
+  learning_rate: 2e-4
+  eval_every_n_epochs: 1
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  max_seq_length: 2048
+  gradient_accumulation_steps: 4
+  bf16: true
+  gradient_checkpointing: true
+  optimizer: "paged_adamw_8bit"
+  lr_scheduler: "cosine"
+  # 是否输出样例
+  output_samples: true
+  num_samples: 3
+  # 从 checkpoint 恢复
+  resume_from_checkpoint: ""
+
+# --- 数据集 ---
+data:
+  dataset_dir: "./datasets"
+  val_split: 0.05
+  shuffle: true
+  seed: 42
+  # 数据质量检查
+  quality_check: true
+  # 最短/最长样本（过滤异常数据）
+  min_length: 10
+  max_length: 8192
+  # 是否去重
+  dedup: true
+
+# --- WandB 云日志（可选，需注册 wandb.ai）---
+wandb:
+  # 是否启用（首次使用会要求输入 API key）
+  enabled: false
+  # 项目名
+  project: "llm-finetune"
+  # 实验名（留空自动生成）
+  run_name: ""
+  # WandB API key（留空则用 wandb login 登录）
+  api_key: ""
+
+# --- 输出 ---
+output:
+  output_dir: "./outputs"
+  save_steps: 100
+  log_dir: "./logs"
+  tensorboard_port: 6006
+
+# --- 导出 ---
+export:
+  format: "both"
+  gguf_quant: "Q4_K_M"
+  cleanup: false
