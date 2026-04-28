@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+
+# Training outputs
+logs/
+outputs/
+*.pt
+*.pth
+*.ckpt
+
+# Unsloth cache
+unsloth_compiled_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local config
+.env
